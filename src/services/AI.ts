@@ -1,6 +1,5 @@
 import OpenAI from "openai";
 
-// Membaca dari environment variables Vite
 const OPENROUTER_API_KEY = import.meta.env.VITE_OPENROUTER_API_KEY;
 const SITE_URL = import.meta.env.VITE_SITE_URL || "http://localhost:5173";
 const SITE_NAME = import.meta.env.VITE_SITE_NAME || "Business Dashboard";
@@ -19,21 +18,34 @@ const openai = new OpenAI({
   },
 });
 
-export const analyzeBusinessPerformance = async (data: any[]) => {
+export const analyzeBusinessPerformance = async (data: any[], platform: string) => {
   try {
-    // Kita batasi data agar tidak memakan terlalu banyak token
-    const dataSample = JSON.stringify(data.slice(0, 50)); 
+    // Membatasi data namun tetap representatif
+    const dataSample = JSON.stringify(data.slice(0, 100)); 
 
     const completion = await openai.chat.completions.create({
       model: "arcee-ai/trinity-large-preview:free",
       messages: [
         {
           role: "system",
-          content: "Kamu adalah analis bisnis ahli. Analisa data penjualan JSON berikut. Berikan ringkasan performa, tren penjualan, dan rekomendasi singkat dalam format HTML (gunakan tag <p>, <ul>, <li>, <strong>). Bahasa: Indonesia."
+          content: `Anda adalah Konsultan Bisnis Senior. Tugas Anda adalah menganalisa data penjualan dari platform ${platform}.
+          
+          Logika Analisa:
+          1. Identifikasi Produk Terlaris (Best Seller) berdasarkan Qty.
+          2. Hitung estimasi total pendapatan dari data yang diberikan.
+          3. Temukan tren (misal: kategori mana yang paling dominan).
+          4. Berikan 3 rekomendasi strategis yang spesifik dan actionable.
+
+          Format Output: Gunakan HTML murni (tanpa markdown box) dengan tag:
+          - <h3> untuk judul bagian
+          - <strong> untuk penekanan
+          - <ul> dan <li> untuk poin-poin
+          - <p> untuk paragraf.
+          Bahasa: Indonesia yang profesional.`
         },
         {
           role: "user",
-          content: `Berikut adalah data penjualan toko: ${dataSample}`
+          content: `Berikut adalah data transaksi JSON: ${dataSample}`
         }
       ],
     });
